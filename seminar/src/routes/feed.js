@@ -15,7 +15,7 @@ class FeedDB {
     constructor() { console.log("[Feed-DB] DB Init Completed"); }
 
     selectItems = async ( count, search ) => {
-        try {
+       try {
             if (count === 0) return { success: true, data: [] };
             // We'll Remove the Item Count Limit for Search... (Really, this is unnecessary)
             /*
@@ -29,7 +29,7 @@ class FeedDB {
         } catch (e) {
             console.log(`[Feed-DB] Select Error: ${ e }`);
             return { success: false, data: `DB Error - ${ e }` };
-        }
+        } 
     }
 
     insertItem = async ( item ) => {
@@ -51,6 +51,17 @@ class FeedDB {
             return true;
         } catch (e) {
             console.log(`[Feed-DB] Delete Error: ${ e }`);
+            return false;
+        }
+    }
+
+    updateItem = async ( item ) => {
+        try {
+            const { id, new_title, new_content } = item;
+            const res = await FeedModel.updateOne( {_id: id}, {$set: {title: new_title, content: new_content}} )            
+            return true
+        } catch (e) {
+            console.log(`[Feed-DB] Update Error: ${ e }`);
             return false;
         }
     }
@@ -86,6 +97,17 @@ router.post('/deleteFeed', async (req, res) => {
         const { id } = req.body;
         const deleteResult = await feedDBInst.deleteItem(id);
         if (!deleteResult) return res.status(500).json({ error: "No item deleted" })
+        else return res.status(200).json({ isOK: true });
+    } catch (e) {
+        return res.status(500).json({ error: e });
+    }
+})
+
+router.post('/updateFeed', async (req, res) => {
+    try {
+        const { id, new_title, new_content } = req.body;
+        const updateResult = await feedDBInst.updateItem({id, new_title, new_content});
+        if (!updateResult) return res.status(500).json({ error: "No item updated" })
         else return res.status(200).json({ isOK: true });
     } catch (e) {
         return res.status(500).json({ error: e });

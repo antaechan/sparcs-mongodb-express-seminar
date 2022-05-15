@@ -3,6 +3,7 @@ import axios from "axios";
 import { SAPIBase } from "../tools/api";
 import Header from "../components/header";
 import "./css/feed.css";
+import { idText } from "typescript";
 
 interface IAPIResponse  { _id: string, title: string, content: string, itemViewCnt: number }
 
@@ -13,6 +14,10 @@ const FeedPage = (props: {}) => {
   const [ SNewPostContent, setSNewPostContent ] = React.useState<string>("");
   const [ SSearchItem, setSSearchItem ] = React.useState<string>("");
 
+  const [ updateId, setUpdateId ] = React.useState<string>("");
+  const [ SNewUpdateTitle, setSNewUpdateTitle ] = React.useState<string>("");
+  const [ SNewUpdateContent, setSNewUpdateContent ] = React.useState<string>("");
+  
   React.useEffect( () => {
     let BComponentExited = false;
     const asyncFun = async () => {
@@ -24,7 +29,7 @@ const FeedPage = (props: {}) => {
     };
     asyncFun().catch((e) => window.alert(`Error while running API Call: ${e}`));
     return () => { BComponentExited = true; }
-  }, [ NPostCount, SSearchItem ]);
+  }, [ NPostCount, SSearchItem, updateId ]);
 
   const createNewPost = () => {
     const asyncFun = async () => {
@@ -41,6 +46,23 @@ const FeedPage = (props: {}) => {
       // One can set X-HTTP-Method header to DELETE to specify deletion as well
       await axios.post( SAPIBase + '/feed/deleteFeed', { id: id } );
       setNPostCount(Math.max(NPostCount - 1, 0));
+    }
+    asyncFun().catch(e => window.alert(`AN ERROR OCCURED! ${e}`));
+  }
+
+  const updatePost = () => {
+    const asyncFun = async () => {
+      await axios.post( SAPIBase + '/feed/updateFeed', { id: updateId, new_title: SNewUpdateTitle, new_content: SNewUpdateContent } );
+      setUpdateId("");
+      setSNewUpdateTitle("")
+      setSNewUpdateContent("")
+    }
+    asyncFun().catch(e => window.alert(`AN ERROR OCCURED! ${e}`));
+  }
+
+  const getPostInfo = (id: string) => {
+    const asyncFun = async () => {
+      setUpdateId(id);
     }
     asyncFun().catch(e => window.alert(`AN ERROR OCCURED! ${e}`));
   }
@@ -67,6 +89,7 @@ const FeedPage = (props: {}) => {
             <div className={"delete-item"} onClick={(e) => deletePost(`${val._id}`)}>ⓧ</div>
             <h3 className={"feed-title"}>{ val.title }</h3>
             <p className={"feed-body"}>{ val.content }</p>
+            <p><button onClick = {(e) => getPostInfo( `${val._id}` )}>update</button></p>
           </div>
         ) }
         <div className={"feed-item-add"}>
@@ -74,6 +97,13 @@ const FeedPage = (props: {}) => {
           &nbsp;&nbsp;&nbsp;&nbsp;
           Content: <input type={"text"} value={SNewPostContent} onChange={(e) => setSNewPostContent(e.target.value)}/>
           <div className={"post-add-button"} onClick={(e) => createNewPost()}>Add Post!</div>
+        </div>
+        <p></p>
+        <div className={"feed-item-update"}>
+          Title: <input type={"text"} value={SNewUpdateTitle} onChange={(e) => setSNewUpdateTitle(e.target.value)}/>
+          &nbsp;&nbsp;&nbsp;&nbsp;
+          Content: <input type={"text"} value={SNewUpdateContent} onChange={(e) => setSNewUpdateContent(e.target.value)}/>
+          <div className={"post-update-button"} onClick={(e) => updatePost()}>Update Post!</div>
         </div>
       </div>
     </div>
